@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devasya Marks Organizer - Exams</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: blue;
+            color: #fff;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #77aaff 3px solid;
+        }
+        header h1 {
+            text-align: center;
+        }
+        .list {
+            list-style: none;
+            padding: 0;
+        }
+        .list-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .list-item a {
+            text-decoration: none;
+            color: #000;
+        }
+        .footer {
+            background: blue;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 5px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .footer-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Devasya Marks Organizer - Exams</h1>
+    </header>
+    
+    <div class="container">
+        <ul class="list" id="examList">
+            <!-- Exam list will be dynamically populated -->
+        </ul>
+        <button onclick="addExam()">Add Exam</button>
+    </div>
+
+    <footer class="footer" id="footer">
+        <p>&copy; 2024 <a href="https://www.youtube.com/channel/UCClrk_k6iZZcS1CqNRUU79g" target="_blank">TecH EpiK</a></p>
+        <button class="footer-toggle" onclick="toggleFooter()">Hide Footer</button>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadExams);
+
+        function addExam() {
+            const examName = prompt("Enter the exam name:");
+            if (examName) {
+                const list = document.getElementById("examList");
+                const item = document.createElement("li");
+                item.className = "list-item";
+                const person = new URLSearchParams(window.location.search).get('person');
+                const cls = new URLSearchParams(window.location.search).get('class');
+                item.innerHTML = `<a href="subjects.html?person=${encodeURIComponent(person)}&class=${encodeURIComponent(cls)}&exam=${encodeURIComponent(examName)}">${examName}</a>
+                                  <span id="percentage_${encodeURIComponent(examName)}">0%</span>
+                                  <button onclick="editExam('${examName}')">Edit</button>
+                                  <button onclick="removeExam('${examName}', this)">Remove</button>`;
+                list.appendChild(item);
+                saveExams();
+            }
+        }
+
+        function editExam(examName) {
+            const newName = prompt("Enter the new name:", examName);
+            if (newName) {
+                const examList = document.getElementById("examList");
+                const examItems = examList.getElementsByTagName("li");
+                for (let item of examItems) {
+                    if (item.querySelector("a").textContent === examName) {
+                        const person = new URLSearchParams(window.location.search).get('person');
+                        const cls = new URLSearchParams(window.location.search).get('class');
+                        item.querySelector("a").textContent = newName;
+                        item.querySelector("a").href = `subjects.html?person=${encodeURIComponent(person)}&class=${encodeURIComponent(cls)}&exam=${encodeURIComponent(newName)}`;
+                        break;
+                    }
+                }
+                saveExams();
+            }
+        }
+
+        function removeExam(examName, button) {
+            if (confirm("Are you sure you want to remove this exam?")) {
+                button.parentElement.remove();
+                saveExams();
+            }
+        }
+
+        function saveExams() {
+            const exams = [];
+            document.querySelectorAll("#examList .list-item a").forEach(examItem => {
+                const name = examItem.textContent;
+                exams.push(name);
+            });
+            const person = new URLSearchParams(window.location.search).get('person');
+            const cls = new URLSearchParams(window.location.search).get('class');
+            localStorage.setItem(`exams_${person}_${cls}`, JSON.stringify(exams));
+        }
+
+        function loadExams() {
+            const person = new URLSearchParams(window.location.search).get('person');
+            const cls = new URLSearchParams(window.location.search).get('class');
+            const exams = JSON.parse(localStorage.getItem(`exams_${person}_${cls}`)) || [];
+            const list = document.getElementById("examList");
+            list.innerHTML = "";
+            exams.forEach(examName => {
+                const item = document.createElement("li");
+                item.className = "list-item";
+                item.innerHTML = `<a href="subjects.html?person=${encodeURIComponent(person)}&class=${encodeURIComponent(cls)}&exam=${encodeURIComponent(examName)}">${examName}</a>
+                                  <span id="percentage_${encodeURIComponent(examName)}">0%</span>
+                                  <button onclick="editExam('${examName}')">Edit</button>
+                                  <button onclick="removeExam('${examName}', this)">Remove</button>`;
+                list.appendChild(item);
+                updateExamPercentage(examName);
+            });
+        }
+
+        function updateExamPercentage(examName) {
+            const person = new URLSearchParams(window.location.search).get('person');
+            const cls = new URLSearchParams(window.location.search).get('class');
+            const exam = examName;
+            const subjects = JSON.parse(localStorage.getItem(`subjects_${person}_${cls}_${exam}`)) || [];
+            const totalMarks = subjects.reduce((total, subject) => total + (subject.marks || 0), 0);
+            const maxMarks = subjects.reduce((total, subject) => total + (subject.maxMarks || 0), 0);
+            const percentage = maxMarks > 0 ? ((totalMarks / maxMarks) * 100).toFixed(2) : 0;
+            document.getElementById(`percentage_${encodeURIComponent(examName)}`).textContent = `${percentage}%`;
+        }
+
+        function toggleFooter() {
+            const footer = document.getElementById("footer");
+            if (footer.style.display === "none") {
+                footer.style.display = "block";
+                document.querySelector(".footer-toggle").textContent = "Hide Footer";
+            } else {
+                footer.style.display = "none";
+                document.querySelector(".footer-toggle").textContent = "Show Footer";
+            }
+        }
+    </script>
+</body>
+</html>

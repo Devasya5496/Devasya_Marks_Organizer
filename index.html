@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devasya Marks Organizer - Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: blue;
+            color: #fff;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #77aaff 3px solid;
+        }
+        header h1 {
+            text-align: center;
+        }
+        .list {
+            list-style: none;
+            padding: 0;
+        }
+        .list-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .list-item a {
+            text-decoration: none;
+            color: #000;
+        }
+        .footer {
+            background: blue;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 5px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .footer-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Devasya Marks Organizer - Home</h1>
+    </header>
+    
+    <div class="container">
+        <ul class="list" id="personList">
+            <!-- Person list will be dynamically populated -->
+        </ul>
+        <button onclick="addPerson()">Add Person</button>
+    </div>
+
+    <footer class="footer" id="footer">
+        <p>&copy; 2024 <a href="https://www.youtube.com/channel/UCClrk_k6iZZcS1CqNRUU79g" target="_blank">TecH EpiK</a></p>
+        <button class="footer-toggle" onclick="toggleFooter()">Hide Footer</button>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadPersons);
+
+        function addPerson() {
+            const personName = prompt("Enter the person's name:");
+            if (personName) {
+                const list = document.getElementById("personList");
+                const item = document.createElement("li");
+                item.className = "list-item";
+                item.innerHTML = `<a href="classes.html?person=${encodeURIComponent(personName)}">${personName}</a>
+                                  <button onclick="editPerson('${personName}')">Edit</button>
+                                  <button onclick="removePerson('${personName}', this)">Remove</button>`;
+                list.appendChild(item);
+                savePersons();
+            }
+        }
+
+        function editPerson(personName) {
+            const newName = prompt("Enter the new name:", personName);
+            if (newName) {
+                const personList = document.getElementById("personList");
+                const personItems = personList.getElementsByTagName("li");
+                for (let item of personItems) {
+                    if (item.querySelector("a").textContent === personName) {
+                        item.querySelector("a").textContent = newName;
+                        item.querySelector("a").href = `classes.html?person=${encodeURIComponent(newName)}`;
+                        break;
+                    }
+                }
+                savePersons();
+            }
+        }
+
+        function removePerson(personName, button) {
+            if (confirm("Are you sure you want to remove this person?")) {
+                button.parentElement.remove();
+                savePersons();
+            }
+        }
+
+        function savePersons() {
+            const persons = [];
+            document.querySelectorAll("#personList .list-item a").forEach(personItem => {
+                const name = personItem.textContent;
+                persons.push(name);
+            });
+            localStorage.setItem('persons', JSON.stringify(persons));
+        }
+
+        function loadPersons() {
+            const persons = JSON.parse(localStorage.getItem('persons')) || [];
+            const list = document.getElementById("personList");
+            list.innerHTML = "";
+            persons.forEach(personName => {
+                const item = document.createElement("li");
+                item.className = "list-item";
+                item.innerHTML = `<a href="classes.html?person=${encodeURIComponent(personName)}">${personName}</a>
+                                  <button onclick="editPerson('${personName}')">Edit</button>
+                                  <button onclick="removePerson('${personName}', this)">Remove</button>`;
+                list.appendChild(item);
+            });
+        }
+
+        function toggleFooter() {
+            const footer = document.getElementById("footer");
+            if (footer.style.display === "none") {
+                footer.style.display = "block";
+                document.querySelector(".footer-toggle").textContent = "Hide Footer";
+            } else {
+                footer.style.display = "none";
+                document.querySelector(".footer-toggle").textContent = "Show Footer";
+            }
+        }
+    </script>
+</body>
+</html>

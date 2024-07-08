@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devasya Marks Organizer - Subjects</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: blue;
+            color: #fff;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #77aaff 3px solid;
+        }
+        header h1 {
+            text-align: center;
+        }
+        .list {
+            list-style: none;
+            padding: 0;
+        }
+        .list-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .list-item a {
+            text-decoration: none;
+            color: #000;
+        }
+        .footer {
+            background: blue;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 5px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .hide-footer-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: red;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .hide-footer-btn:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Devasya Marks Organizer - Subjects</h1>
+    </header>
+    
+    <div class="container">
+        <ul class="list" id="subjectList">
+            <!-- Subject list will be dynamically populated -->
+        </ul>
+        <button onclick="addSubject()">Add Subject</button>
+        <div id="percentageDisplay">Percentage: <span id="percentageValue"></span>%</div>
+    </div>
+
+    <footer class="footer" id="footer">
+        <button class="hide-footer-btn" onclick="toggleFooter()">Hide Footer</button>
+        <p>&copy; 2024 <a href="https://www.youtube.com/channel/UCClrk_k6iZZcS1CqNRUU79g" target="_blank">TecH EpiK</a></p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadSubjects);
+
+        const defaultSubjects = ["Maths", "Hindi", "English", "Computer", "SST", "Science"];
+
+        function addSubject() {
+            const subjectName = prompt("Enter the subject name:");
+            const marksObtained = prompt("Enter the marks obtained:");
+            const maxMarks = prompt("Enter the maximum marks:");
+            if (subjectName && marksObtained && maxMarks) {
+                const list = document.getElementById("subjectList");
+                const item = document.createElement("li");
+                item.className = "list-item";
+                item.innerHTML = `${subjectName}: 
+                                  <input type="number" value="${marksObtained}" class="marksObtained" data-subject="${subjectName}" oninput="updatePercentage()">
+                                  <input type="number" value="${maxMarks}" class="maxMarks" data-subject="${subjectName}" oninput="updatePercentage()">
+                                  <button onclick="editSubject('${subjectName}', this)">Edit</button>
+                                  <button onclick="removeSubject('${subjectName}', this)">Remove</button>`;
+                list.appendChild(item);
+                saveSubjects();
+                updatePercentage();
+            }
+        }
+
+        function editSubject(subjectName, button) {
+            const newSubjectName = prompt("Enter the new subject name:", subjectName);
+            const newMarksObtained = prompt("Enter the new marks obtained:");
+            const newMaxMarks = prompt("Enter the new maximum marks:");
+            if (newSubjectName && newMarksObtained && newMaxMarks) {
+                const item = button.parentElement;
+                item.innerHTML = `${newSubjectName}: 
+                                  <input type="number" value="${newMarksObtained}" class="marksObtained" data-subject="${newSubjectName}" oninput="updatePercentage()">
+                                  <input type="number" value="${newMaxMarks}" class="maxMarks" data-subject="${newSubjectName}" oninput="updatePercentage()">
+                                  <button onclick="editSubject('${newSubjectName}', this)">Edit</button>
+                                  <button onclick="removeSubject('${newSubjectName}', this)">Remove</button>`;
+                saveSubjects();
+                updatePercentage();
+            }
+        }
+
+        function removeSubject(subjectName, button) {
+            if (confirm("Are you sure you want to remove this subject?")) {
+                button.parentElement.remove();
+                saveSubjects();
+                updatePercentage();
+            }
+        }
+
+        function saveSubjects() {
+            const subjects = [];
+            document.querySelectorAll("#subjectList .list-item").forEach(item => {
+                const name = item.childNodes[0].nodeValue.trim();
+                const marksObtained = item.querySelector(".marksObtained").value;
+                const maxMarks = item.querySelector(".maxMarks").value;
+                subjects.push({ name, marksObtained, maxMarks });
+            });
+            const person = new URLSearchParams(window.location.search).get('person');
+            const cls = new URLSearchParams(window.location.search).get('class');
+            const exam = new URLSearchParams(window.location.search).get('exam');
+            localStorage.setItem(`subjects_${person}_${cls}_${exam}`, JSON.stringify(subjects));
+        }
+
+        function loadSubjects() {
+            const person = new URLSearchParams(window.location.search).get('person');
+            const cls = new URLSearchParams(window.location.search).get('class');
+            const exam = new URLSearchParams(window.location.search).get('exam');
+            const subjects = JSON.parse(localStorage.getItem(`subjects_${person}_${cls}_${exam}`)) || defaultSubjects.map(subject => ({ name: subject, marksObtained: "", maxMarks: "" }));
+            const list = document.getElementById("subjectList");
+            list.innerHTML = "";
+            subjects.forEach(subject => {
+                const item = document.createElement("li");
+                item.className = "list-item";
+                item.innerHTML = `${subject.name}: 
+                                  <input type="number" value="${subject.marksObtained}" class="marksObtained" data-subject="${subject.name}" oninput="updatePercentage()">
+                                  <input type="number" value="${subject.maxMarks}" class="maxMarks" data-subject="${subject.name}" oninput="updatePercentage()">
+                                  <button onclick="editSubject('${subject.name}', this)">Edit</button>
+                                  <button onclick="removeSubject('${subject.name}', this)">Remove</button>`;
+                list.appendChild(item);
+            });
+            updatePercentage();
+        }
+
+        function updatePercentage() {
+            let totalMarksObtained = 0;
+            let totalMaxMarks = 0;
+            document.querySelectorAll("#subjectList .list-item").forEach(item => {
+                const marksObtained = parseFloat(item.querySelector(".marksObtained").value);
+                const maxMarks = parseFloat(item.querySelector(".maxMarks").value);
+                if (!isNaN(marksObtained) && !isNaN(maxMarks)) {
+                    totalMarksObtained += marksObtained;
+                    totalMaxMarks += maxMarks;
+                }
+            });
+            const percentage = totalMaxMarks ? ((totalMarksObtained / totalMaxMarks) * 100).toFixed(2) : 0;
+            document.getElementById("percentageValue").innerText = percentage;
+        }
+
+        function toggleFooter() {
+            const footer = document.getElementById("footer");
+            if (footer.style.display === "none") {
+                footer.style.display = "block";
+            } else {
+                footer.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
